@@ -9,8 +9,11 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
+help_command = commands.DefaultHelpCommand(
+    no_category = 'Commands'
+)
 intents = discord.Intents().all()
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, help_command = help_command)
 
 @bot.event
 async def on_ready():
