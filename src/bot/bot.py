@@ -36,9 +36,15 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command(name='coinflip', help='I mean... its a coinflip.')
-async def roll(ctx):
+async def flip(ctx):
     dice = ['The coin landed on heads!', 'The coin landed on tails!']
     response = random.choice(dice)
+    await ctx.send(response)
+
+@bot.command(name='rate', help='Rates literally anything.')
+async def rate(ctx, subject):
+    rating = str(random.choice(range(0, 11)))
+    response = f'I give {subject} a {rating}/10.'
     await ctx.send(response)
 
 bot.run(TOKEN)
