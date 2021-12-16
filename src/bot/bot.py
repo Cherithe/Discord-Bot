@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-TENOR_KEY = os.getenv('TENOR_KEY')
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -33,6 +32,8 @@ async def on_ready():
         - None
     """
 
+    global filterOn
+    filterOn = False
     for guild in bot.guilds:
         if guild.name == GUILD:
             break
@@ -45,10 +46,11 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     msg = message.content
-    for word in banned_words:
-        if word in msg:
-            await message.delete()
-            await message.channel.send("Dont use that word!")
+    if filterOn:
+        for word in banned_words:
+            if word in msg:
+                await message.delete()
+                await message.channel.send("Dont use that word!")
     await bot.process_commands(message)
 
 @bot.event
