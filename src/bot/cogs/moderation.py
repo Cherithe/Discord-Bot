@@ -1,4 +1,4 @@
-"""This file contains the cog for general commands."""
+"""This file contains the cog for moderation commands."""
 
 from discord.ext import commands
 import bot
@@ -11,10 +11,10 @@ class Moderation(commands.Cog):
     async def switch(self, ctx):
         if bot.filterOn:
             bot.filterOn = False
-            response = 'Filter has been turned off.'
+            response = 'Chat filter has been turned off.'
         else:
             bot.filterOn = True
-            response = 'Filter has been turned on.'
+            response = 'Chat filter has been turned on.'
         await ctx.send(response)
 
 def setup(bot):

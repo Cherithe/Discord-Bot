@@ -28,15 +28,10 @@ async def on_ready():
     """This function prints information out to standard output when
     the bot has established a connection to Discord.
 
-    Arguments:
-        - None
-
     Return Value:
         - None
     """
 
-    global filterOn
-    filterOn = False
     for guild in bot.guilds:
         if guild.name == GUILD:
             break
@@ -51,9 +46,6 @@ async def on_member_join(member):
     """This function sends a welcome message to members when they
     join a guild that the bot is currently active on.
 
-    Arguments:
-        - member (object): An object created under the Member class in Discord API.
-
     Return Value:
         - None
     """
@@ -66,11 +58,10 @@ async def on_member_join(member):
 @bot.event
 async def on_message(message):
     msg = message.content
-    if filterOn:
-        for word in banned_words:
-            if word in msg:
-                await message.delete()
-                await message.channel.send("Dont use that word!")
+    for word in banned_words:
+        if word in msg:
+            await message.delete()
+            await message.channel.send("Dont use that word!")
     await bot.process_commands(message)
 
 bot.run(TOKEN)
