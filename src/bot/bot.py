@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
+TENOR_KEY = os.getenv('TENOR_KEY')
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -40,20 +41,6 @@ async def on_ready():
 
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
-
-@bot.event
-async def on_member_join(member):
-    """This function sends a welcome message to members when they
-    join a guild that the bot is currently active on.
-
-    Return Value:
-        - None
-    """
-
-    await member.create_dm()
-    await member.dm_channel.send(
-        f'Hi {member.name}, welcome to my rad Discord server!\n'
-    )
 
 @bot.event
 async def on_message(message):
