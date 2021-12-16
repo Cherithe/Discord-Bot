@@ -7,6 +7,7 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.has_permissions(administrator=True)
     @commands.command(name='filter', help='A switch for the word filter')
     async def switch(self, ctx):
         if bot.filterOn:
