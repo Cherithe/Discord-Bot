@@ -30,11 +30,13 @@ async def on_ready():
 
     Arguments:
         - None
-    
+
     Return Value:
         - None
     """
 
+    global filterOn
+    filterOn = False
     for guild in bot.guilds:
         if guild.name == GUILD:
             break
@@ -51,7 +53,7 @@ async def on_member_join(member):
 
     Arguments:
         - member (object): An object created under the Member class in Discord API.
-    
+
     Return Value:
         - None
     """
@@ -64,10 +66,11 @@ async def on_member_join(member):
 @bot.event
 async def on_message(message):
     msg = message.content
-    for word in banned_words:
-        if word in msg:
-            await message.delete()
-            await message.channel.send("Dont use that word!")
+    if filterOn:
+        for word in banned_words:
+            if word in msg:
+                await message.delete()
+                await message.channel.send("Dont use that word!")
     await bot.process_commands(message)
 
 bot.run(TOKEN)
