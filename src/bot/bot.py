@@ -27,9 +27,6 @@ for filename in os.listdir('./cogs'):
 async def on_ready():
     """This function prints information out to standard output when
     the bot has established a connection to Discord.
-
-    Arguments:
-        - None
     
     Return Value:
         - None
@@ -48,9 +45,6 @@ async def on_ready():
 async def on_member_join(member):
     """This function sends a welcome message to members when they
     join a guild that the bot is currently active on.
-
-    Arguments:
-        - member (object): An object created under the Member class in Discord API.
     
     Return Value:
         - None
