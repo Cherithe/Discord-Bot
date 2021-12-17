@@ -13,12 +13,6 @@ GUILD = os.getenv('DISCORD_GUILD')
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# The words from BannedWords.txt which contain profanity and slurs to be
-# filtered out.
-with open('BannedWords.txt', 'r') as f:
-    global banned_words
-    banned_words = f.read().split()
-
 for filename in os.listdir('./cogs'):
   if filename.endswith('.py'):
     bot.load_extension(f'cogs.{filename[:-3]}')
@@ -32,8 +26,6 @@ async def on_ready():
         - None
     """
 
-    global filterOn
-    filterOn = False
     for guild in bot.guilds:
         if guild.name == GUILD:
             break
@@ -42,16 +34,6 @@ async def on_ready():
 
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
-
-@bot.event
-async def on_message(message):
-    msg = message.content
-    if filterOn:
-        for word in banned_words:
-            if word in msg:
-                await message.delete()
-                await message.channel.send("Dont use that word!")
-    await bot.process_commands(message)
 
 @bot.event
 async def on_command_error(ctx, error):

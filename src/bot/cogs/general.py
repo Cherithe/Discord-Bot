@@ -15,8 +15,18 @@ class General(commands.Cog):
 
     @commands.command(name='rate', help='Rates literally anything out of 10.')
     async def rate(self, ctx, subject):
-        rating = str(random.choice(range(0, 11)))
-        response = f'I give {subject} a {rating}/10.'
+        rating = random.choice(range(0, 11))
+        response = f'I give {subject} a {str(rating)}/10.'
+        if rating <= 2:
+            response += ' Sorry but not really.'
+        elif rating <= 4:
+            response += ' I mean... could be worse.'
+        elif rating <= 6:
+            response += ' Not bad!'
+        elif rating <= 8:
+            response += ' Pretty good, ay?'
+        else:
+            response += ' Amazing!'
         await ctx.send(response)
 
 def setup(bot):

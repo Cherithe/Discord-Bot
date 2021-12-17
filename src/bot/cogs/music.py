@@ -6,7 +6,7 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='join', help='Joins the voice channel your are currently in.')
+    @commands.command(name='join', help='Joins the voice channel you are currently in.')
     async def join(self, ctx):
         voice_state = ctx.author.voice
         if voice_state is None:
