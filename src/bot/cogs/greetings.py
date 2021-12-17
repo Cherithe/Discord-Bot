@@ -30,11 +30,22 @@ class Greetings(commands.Cog):
             f'Hi {member.name}, welcome to my rad Discord server!\n'
         )
 
-    @commands.command(name='hi', help='Replies to the user with a gif.')
+    @commands.command(name='hi', help='Replies to the user with a GIF.')
     async def hi(self, ctx):
         async with aiohttp.ClientSession() as session:
             embed = discord.Embed(title="GREETINGS", description="Hello to you too!", color=discord.Color.blurple())
             response = await session.get(f'https://api.tenor.com/v1/search?q=hello&key={TENOR_KEY}&limit=30')
+            data = json.loads(await response.text())
+            gif_choice = random.randint(0,29)
+            embed.set_image(url=data['results'][gif_choice]['media'][0]['mediumgif']['url'])
+        await session.close()
+        await ctx.send(embed=embed)
+
+    @commands.command(name='gif', help='Returns GIF based on keyword.')
+    async def gif(self, ctx, keyword):
+        async with aiohttp.ClientSession() as session:
+            embed = discord.Embed(title="BEHOLD", description=f"Here is a gif of {keyword}.", color=discord.Color.blurple())
+            response = await session.get(f'https://api.tenor.com/v1/search?q={keyword}&key={TENOR_KEY}&limit=30')
             data = json.loads(await response.text())
             gif_choice = random.randint(0,29)
             embed.set_image(url=data['results'][gif_choice]['media'][0]['mediumgif']['url'])
