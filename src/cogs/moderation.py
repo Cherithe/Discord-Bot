@@ -1,4 +1,6 @@
 """This file contains the cog for moderation commands."""
+# NOTE: NEED TO TEST WHETHER THIS BREAKS ON USE WITH MULTIPLE GUILDS: IF THIS
+# IS AN ISSUE, THEN IMPLEMENTATION CAN BE CHANGED TO USE DATASTORE
 
 from discord.ext import commands
 
@@ -13,12 +15,12 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        """This function deletes any messages containing banned words if the 
+        """This function deletes any messages containing banned words if the
         chat filter is turned on.
-
         Return Value:
             - None
         """
+
         msg = message.content
         if self._filterOn is True:
             for word in self._banned_words:

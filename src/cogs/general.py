@@ -14,7 +14,10 @@ class General(commands.Cog):
         await ctx.send(response)
 
     @commands.command(name='rate', help='Rates literally anything out of 10.')
-    async def rate(self, ctx, subject):
+    async def rate(self, ctx, subject = None):
+        if subject is None:
+            await ctx.send('You need to give me a subject to rate, man.')
+            return
         rating = random.choice(range(0, 11))
         response = f'I give {subject} a {str(rating)}/10.'
         if rating <= 2:

@@ -47,7 +47,7 @@ class Gif(commands.Cog):
     async def gif(self, ctx, keyword = None):
         async with aiohttp.ClientSession() as session:
             if keyword is None:
-                embed = discord.Embed(title="Dude", description=f"You need to add a keyword.", color=discord.Color.blurple())
+                embed = discord.Embed(title="DUDE", description=f"You need to add a keyword.", color=discord.Color.blurple())
                 response = await session.get(f'https://api.tenor.com/v1/search?q=disappointment&key={TENOR_KEY}&limit=30')
             else:
                 embed = discord.Embed(title="BEHOLD", description=f"Here is a gif of {keyword}.", color=discord.Color.blurple())
