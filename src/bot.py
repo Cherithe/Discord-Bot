@@ -27,28 +27,26 @@ async def on_ready():
     the bot has established a connection to Discord.
     """
 
-    for active in bot.guilds:
-        if active.name == GUILD:
+    for guild in bot.guilds:
+        if guild.name == GUILD:
             break
     print(f'{bot.user} is connected to the following guild:\n'
-          f'{active.name} (id: {active.id})\n')
+          f'{guild.name} (id: {guild.id})\n')
 
-    members = '\n - '.join([member.name for member in active.members])
+    members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
 
     # If a profile for the guild does not already exist, append a new one onto
     # the list of guilds.
     data = data_store.get()
     guilds = data['guilds']
-    if next((guild for guild in guilds
-                     if active.id == guild['guild_id']), None) is None:
-        guilds.append({
-            'guild_id': active.id,
+    if not f'{guild.id}' in guilds:
+        guilds[f'{guild.id}'] = ({
             'filter': False,
         })
         data_store.set(data)
-        print('A new profile has been created for '
-             f'{active.name} (id: {active.id})')
+        print('A new guild profile has been created for '
+             f'{guild.name} (id: {guild.id})')
 
 @bot.event
 async def GuildLeaveEvent(guild):
@@ -57,11 +55,9 @@ async def GuildLeaveEvent(guild):
     """
     data = data_store.get()
     guilds = data['guilds']
-    leave = next(filter(lambda leave: leave['guild_id'] == guild.id, guilds),
-                 None)
-    guilds.remove(leave)
+    guilds.pop(guild.id, None)
     data_store.set(data)
-    print(f'The profile for {leave.name} (id: {leave.id} has been removed.')
+    print(f'The profile for {guild.name} (id: {guild.id} has been removed.')
 
 @bot.event
 async def on_command_error(ctx, error):

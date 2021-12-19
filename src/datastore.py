@@ -5,8 +5,8 @@ import time
 
 
 initial_obj = {
-    'users': [],
-    'guilds': [],
+    'users': {},
+    'guilds': {},
 }
 
 
