@@ -8,6 +8,7 @@ from discord.ext import commands
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
 
+queue= []
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -29,6 +30,11 @@ ffmpeg_options = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
+async def play_next(self, ctx):
+    vc = ctx.message.guild.voice_client
+    player = await YTDLSource.from_url(queue.pop(0), loop=self.bot.loop)
+    vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
+    await ctx.send('**Now playing:** {}'.format(player.title))
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
@@ -77,12 +83,23 @@ class Music(commands.Cog):
         else:
             await ctx.voice_client.disconnect()
 
-    @commands.command(name='play', help='plays audio of a youtube video based on keyword/url.')
+    @commands.command(name='play', help='Plays audio of a youtube video based on keyword/url.')
     async def play(self, ctx, *, url):
-        async with ctx.typing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            ctx.voice_client.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
-        await ctx.send('Now playing: {}'.format(player.title))
+        queue.append(url)
+        vc = ctx.message.guild.voice_client
+        if vc.is_playing():
+            index = len(queue) - 1
+            player = await YTDLSource.from_url(queue[index], loop=self.bot.loop, stream=True)
+            await ctx.send('**Added:** {} to queue'.format(player.title))
+            queue[index] = player.title
+        else:
+            async with ctx.typing():
+                player = await YTDLSource.from_url(queue[0], loop=self.bot.loop, stream=True)
+                vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
+                print(player.title)
+            await ctx.send('**Now playing:** {}'.format(player.title))
+            queue[0] = player.title
+            queue.pop(0)
 
     @commands.command(name='pause', help='Pauses any audio playing from the bot.')
     async def pause(self, ctx):
@@ -110,8 +127,6 @@ class Music(commands.Cog):
             else:
                 await ctx.send('You are not connected to a voice channel.')
                 raise commands.CommandError('Author not connected to a voice channel.')
-        elif ctx.voice_client.is_playing():
-            ctx.voice_client.stop()
 
 def setup(bot):
     bot.add_cog(Music(bot))
