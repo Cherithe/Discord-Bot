@@ -108,8 +108,8 @@ class Music(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
-                await ctx.send("You are not connected to a voice channel.")
-                raise commands.CommandError("Author not connected to a voice channel.")
+                await ctx.send('You are not connected to a voice channel.')
+                raise commands.CommandError('Author not connected to a voice channel.')
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
