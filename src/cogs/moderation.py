@@ -1,8 +1,8 @@
 """This file contains the cog for moderation commands."""
-# NOTE: NEED TO TEST WHETHER THIS BREAKS ON USE WITH MULTIPLE GUILDS: IF THIS
-# IS AN ISSUE, THEN IMPLEMENTATION CAN BE CHANGED TO USE DATASTORE
 
 from discord.ext import commands
+
+from datastore import data_store
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
@@ -22,7 +22,9 @@ class Moderation(commands.Cog):
         """
 
         msg = message.content
-        if self._filterOn is True:
+        data = data_store.get()
+        guild = data['guilds'][f'{message.guild.id}']
+        if guild['filter'] is True:
             for word in self._banned_words:
                 if word in msg:
                     await message.delete()
@@ -31,16 +33,19 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.command(name='filter', help='A switch for the word filter.')
     async def switch(self, ctx):
-        if self._filterOn:
-            self._filterOn = False
+        data = data_store.get()
+        guild = data['guilds'][f'{ctx.message.guild.id}']
+        if guild['filter'] is True:
+            guild['filter'] = False
             response = 'Filter has been turned off.'
         else:
-            self._filterOn = True
+            guild['filter'] = True
             response = 'Filter has been turned on.'
         await ctx.send(response)
+        data_store.set(data)
     
     @commands.has_permissions(administrator=True)
-    @commands.command(name='clean', help='Clears a given number of messages.')
+    @commands.command(name='clean', help='Deletes a given number of messages.')
     async def clean(self, ctx, number):
         if int(number) <= 0:
             await ctx.send('Invalid number of messages to delete.')
@@ -50,7 +55,7 @@ class Moderation(commands.Cog):
             response = f'{number} messages have been deleted.'
         else:
             response = '1 message has been deleted. Happy?'
-        # await ctx.send(response).then(msg => {setTimeout(() => msg.delete(), 10000)}).catch
+        await ctx.send(response)
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

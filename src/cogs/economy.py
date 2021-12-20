@@ -34,7 +34,7 @@ class Economy(commands.Cog):
         user = data['users'][f'{ctx.author.id}']
         embed = discord.Embed(title='USER PROFILE', description=f'{ctx.author}\'s user profile', color=discord.Color.blurple())
         embed.add_field(name = f'Account Balance:', value = f'{user["money"]} coins', inline = False)
-        embed.add_field(name = f'Inventory:', value = 'N/A', inline = False)
+        embed.add_field(name = f'Inventory:', value = 'N/A', inline = False) # NOT YET IMPLEMENTED
         embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
         await ctx.send(embed=embed)
 

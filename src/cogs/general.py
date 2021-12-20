@@ -33,9 +33,27 @@ class General(commands.Cog):
             response += ' Amazing!'
         await ctx.send(response)
 
-    @commands.command(name='pfp', help='Gets the profile picture of mentioned user.')
+    @commands.command(name='8ball', help='Gives a burning response to your burning question.')
+    async def eight_ball(self, ctx, *, arg = None):
+        if arg is None:
+            await ctx.send('Even a magician can\'t see the future if you don\'t'
+                           ' give them anything to work with.')
+            return
+        if arg[-1] != '?':
+            await ctx.send('So... are we going to be here all day or are you going to ask me a question?')
+            print(type(arg[-1]))
+            print(arg[-1])
+            return
+        responses = ['As I see it, yes.', 'Ask again later.', 'Better not tell you now.', 'Cannot predict now.', 'Concentrate and ask again.',
+             'Don\'t count on it.', 'It is certain.', 'It is decidedly so.', 'Most likely.', 'My reply is no.', 'My sources say no.',
+             'Outlook not so good.', 'Outlook good.', 'Reply hazy, try again.', 'Signs point to yes.', 'Very doubtful.', 'Without a doubt.',
+             'Yes.', 'Yes, definitely.', 'You may rely on it.']
+        response = random.choice(responses)
+        await ctx.send(response)
+
+    @commands.command(name='pfp', help='Blows up the profile picture of mentioned user.')
     async def pfp(self, ctx, user: discord.User):
-        embed = discord.Embed(title=f'WATCH THIS', description=f"{user}'s profile picture", color=discord.Color.blurple())
+        embed = discord.Embed(title=f'WOW', description=f"{user}'s profile picture", color=discord.Color.blurple())
         embed.set_image(url=user.avatar_url)
         await ctx.send(embed=embed)
 
