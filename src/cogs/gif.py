@@ -35,7 +35,7 @@ class Gif(commands.Cog):
     @commands.command(name='hi', help='Replies to the user with a GIF.')
     async def hi(self, ctx):
         async with aiohttp.ClientSession() as session:
-            embed = discord.Embed(title="GREETINGS", description="Hello to you too!", color=discord.Color.blurple())
+            embed = discord.Embed(title='GREETINGS', description='Hello to you too!', color=discord.Color.blurple())
             response = await session.get(f'https://api.tenor.com/v1/search?q=hello&key={TENOR_KEY}&limit=30')
             data = json.loads(await response.text())
             gif_choice = random.randint(0,29)
@@ -47,10 +47,10 @@ class Gif(commands.Cog):
     async def gif(self, ctx, keyword = None):
         async with aiohttp.ClientSession() as session:
             if keyword is None:
-                embed = discord.Embed(title="DUDE", description=f"You need to add a keyword.", color=discord.Color.blurple())
+                embed = discord.Embed(title='DUDE', description=f'You need to add a keyword.', color=discord.Color.blurple())
                 response = await session.get(f'https://api.tenor.com/v1/search?q=disappointment&key={TENOR_KEY}&limit=30')
             else:
-                embed = discord.Embed(title="BEHOLD", description=f"Here is a gif of {keyword}.", color=discord.Color.blurple())
+                embed = discord.Embed(title='BEHOLD', description=f'Here is a gif of {keyword}.', color=discord.Color.blurple())
                 response = await session.get(f'https://api.tenor.com/v1/search?q={keyword}&key={TENOR_KEY}&limit=30')
 
             data = json.loads(await response.text())

@@ -38,6 +38,19 @@ class Moderation(commands.Cog):
             self._filterOn = True
             response = 'Filter has been turned on.'
         await ctx.send(response)
+    
+    @commands.has_permissions(administrator=True)
+    @commands.command(name='clean', help='Clears a given number of messages.')
+    async def clean(self, ctx, number):
+        if int(number) <= 0:
+            await ctx.send('Invalid number of messages to delete.')
+            return
+        await ctx.channel.purge(limit=(int(number) + 1))
+        if int(number) > 1:
+            response = f'{number} messages have been deleted.'
+        else:
+            response = '1 message has been deleted. Happy?'
+        # await ctx.send(response).then(msg => {setTimeout(() => msg.delete(), 10000)}).catch
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
