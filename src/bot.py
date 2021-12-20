@@ -15,11 +15,12 @@ GUILD = os.getenv('DISCORD_GUILD')
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+print('Loading Cogs...\n')
 for filename in os.listdir('./cogs'):
   if filename.endswith('.py'):
     bot.load_extension(f'cogs.{filename[:-3]}')
 
-print("--------------------- EVENT LOGS ---------------------\n")
+print('--------------------- EVENT LOGS ---------------------\n')
 
 @bot.event
 async def on_ready():

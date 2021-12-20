@@ -1,5 +1,6 @@
 """This file contains the cog for general commands."""
 
+import discord
 from discord.ext import commands
 import random
 
@@ -31,6 +32,12 @@ class General(commands.Cog):
         else:
             response += ' Amazing!'
         await ctx.send(response)
+
+    @commands.command(name='pfp', help='Gets the profile picture of mentioned user.')
+    async def pfp(self, ctx, user: discord.User):
+        embed = discord.Embed(title=f'WATCH THIS', description=f"{user}'s profile picture", color=discord.Color.blurple())
+        embed.set_image(url=user.avatar_url)
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(General(bot))

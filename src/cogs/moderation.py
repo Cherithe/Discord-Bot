@@ -45,7 +45,7 @@ class Moderation(commands.Cog):
         if int(number) <= 0:
             await ctx.send('Invalid number of messages to delete.')
             return
-        await ctx.channel.purge(limit=int(number))
+        await ctx.channel.purge(limit=(int(number) + 1))
         if int(number) > 1:
             response = f'{number} messages have been deleted.'
         else:
