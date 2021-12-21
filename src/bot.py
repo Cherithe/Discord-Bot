@@ -35,7 +35,7 @@ async def on_ready():
           f'{guild.name} (id: {guild.id})\n')
 
     members = '\n - '.join([member.name for member in guild.members])
-    print(f'Guild Members:\n - {members}')
+    print(f'Guild Members:\n - {members}\n')
 
     # If a profile for the guild does not already exist, append a new one onto
     # the list of guilds.

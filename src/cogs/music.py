@@ -8,7 +8,7 @@ from discord.ext import commands
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
 
-queue= []
+queue = []
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -49,11 +49,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-
         if 'entries' in data:
             # take first item from a playlist
             data = data['entries'][0]
-
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
@@ -67,6 +65,8 @@ class Music(commands.Cog):
         if ctx.author.voice is None or ctx.author.voice.channel is None:
             return await ctx.send('You must be connected to a voice channel to use this command.')
         voice_channel = ctx.author.voice.channel
+        if 919765855435366490 in ctx.author.voice.channel.voice_states.keys():
+            return await ctx.send('I am already connected to your voice channel. Check again!')
         if ctx.voice_client is None:
             await voice_channel.connect()
         else:
@@ -84,21 +84,19 @@ class Music(commands.Cog):
             await ctx.voice_client.disconnect()
 
     @commands.command(name='play', help='Plays audio of a youtube video based on keyword/url.')
-    async def play(self, ctx, *, url):
-        queue.append(url)
+    async def play(self, ctx, *, url):         
         vc = ctx.message.guild.voice_client
         if vc.is_playing():
-            index = len(queue) - 1
-            player = await YTDLSource.from_url(queue[index], loop=self.bot.loop, stream=True)
+            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
             await ctx.send('**Added:** {} to queue'.format(player.title))
-            queue[index] = player.title
+            queue.append(player.title)
         else:
             async with ctx.typing():
-                player = await YTDLSource.from_url(queue[0], loop=self.bot.loop, stream=True)
+                player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+                queue.append(player.title)
+                print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
                 vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
-                print(player.title)
             await ctx.send('**Now playing:** {}'.format(player.title))
-            queue[0] = player.title
             queue.pop(0)
 
     @commands.command(name='pause', help='Pauses any audio playing from the bot.')

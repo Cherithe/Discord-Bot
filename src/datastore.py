@@ -55,10 +55,10 @@ class Datastore:
         self.__store = store
 
         # Only update the persistence file if it was not updated in the last
-        # second to reduce the time it takes to save the data store.
+        # 10 seconds to reduce the time it takes to save the data store.
 
         curr_time = time.time()
-        if curr_time > self.last_update_time + 1:
+        if curr_time > self.last_update_time + 10:
             self.last_update_time = curr_time
             with open('persistence.json', 'w') as file:
                 json.dump(self.__store, file)

@@ -27,7 +27,7 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='profile', help='Show\'s your user profile')
+    @commands.command(name='profile', help='Shows your user profile')
     async def profile(self, ctx):
         create_user(ctx.author)
         data = data_store.get()
