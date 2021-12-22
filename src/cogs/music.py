@@ -5,10 +5,10 @@ import youtube_dl
 
 from discord.ext import commands
 
+from datastore import data_store
+
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
-
-queue = []
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -31,17 +31,21 @@ ffmpeg_options = {
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 async def play_next(self, ctx):
+    data = data_store.get()
+    queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
     vc = ctx.message.guild.voice_client
+    # Pops the first item from the queue
     player = await YTDLSource.from_url(queue.pop(0), loop=self.bot.loop)
-    vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
+    data_store.set(data)
     await ctx.send('**Now playing:** {}'.format(player.title))
+    print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
+    vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
 
         self.data = data
-
         self.title = data.get('title')
         self.url = data.get('url')
 
@@ -65,6 +69,7 @@ class Music(commands.Cog):
         if ctx.author.voice is None or ctx.author.voice.channel is None:
             return await ctx.send('You must be connected to a voice channel to use this command.')
         voice_channel = ctx.author.voice.channel
+        # Checks if the bot_id is in the list of user_ids connected to the author's voice channel.
         if 919765855435366490 in ctx.author.voice.channel.voice_states.keys():
             return await ctx.send('I am already connected to your voice channel. Check again!')
         if ctx.voice_client is None:
@@ -73,7 +78,7 @@ class Music(commands.Cog):
             await ctx.voice_client.move_to(voice_channel)
             ctx.voice_client
 
-    @commands.command(name='leave', help='Disconnects bot from vc if connected.')
+    @commands.command(name='leave', help='Disconnects bot from the voice channel if connected.')
     async def leave(self, ctx):
         voice_state = ctx.author.voice
         if voice_state is None:
@@ -85,19 +90,23 @@ class Music(commands.Cog):
 
     @commands.command(name='play', help='Plays audio of a youtube video based on keyword/url.')
     async def play(self, ctx, *, url):
+        data = data_store.get()
+        queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
         vc = ctx.message.guild.voice_client
         if vc.is_playing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            await ctx.send('**Added:** {} to queue'.format(player.title))
+            await ctx.send(f'**Added:** {format(player.title)} at position {str(len(queue) + 1)} in queue.')
             queue.append(player.title)
         else:
             async with ctx.typing():
                 player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
                 queue.append(player.title)
-                print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
                 vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
             await ctx.send('**Now playing:** {}'.format(player.title))
+            print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
+            # Removes the first item from the queue
             queue.pop(0)
+        data_store.set(data)
 
     @commands.command(name='pause', help='Pauses any audio playing from the bot.')
     async def pause(self, ctx):
@@ -111,11 +120,35 @@ class Music(commands.Cog):
         vc.resume()
         await ctx.send('Bot has resumed playing.')
 
-    @commands.command(name='stop', help='Stops any audio playing from bot.')
+    @commands.command(name='stop', help='Stops any audio playing from bot and clears queue.')
     async def stop(self, ctx):
+        data = data_store.get()
+        queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
+        queue.clear()
+        data_store.set(data)
         vc = ctx.message.guild.voice_client
         vc.stop()
         await ctx.send('Bot has stopped playing.')
+
+    @commands.command(name='skip', help='Skips the current-playing song.')
+    async def skip(self, ctx):
+        vc = ctx.message.guild.voice_client
+        vc.stop()
+        await ctx.send('Skipped.')
+        await play_next(self, ctx)
+
+    @commands.command(aliases=['q'], help='Prints the currently queued songs.')
+    async def queue(self, ctx):
+        data = data_store.get()
+        queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
+        queue_list = ''
+        for count, item in enumerate(queue, 1):
+            queue_list += f'**[{count}]**:   {item}\n\n'
+        if queue_list == '':
+            queue_list = 'The queue is currently empty! Add more songs using !play.'
+        embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
+        embed.add_field(name = f'Up next:', value = queue_list, inline = False)
+        await ctx.send(embed=embed)
 
     @play.before_invoke
     async def ensure_voice(self, ctx):

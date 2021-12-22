@@ -44,10 +44,14 @@ async def on_ready():
     if not f'{guild.id}' in guilds:
         guilds[f'{guild.id}'] = ({
             'filter': False,
+            'queue': [],
         })
-        data_store.set(data)
         print('A new guild profile has been created for '
              f'{guild.name} (id: {guild.id})')
+    else:
+        # Clears the queue for the guild
+        guilds[f'{guild.id}']['queue'].clear()
+    data_store.set(data)
 
 @bot.event
 async def GuildLeaveEvent(guild):
@@ -62,6 +66,10 @@ async def GuildLeaveEvent(guild):
 
 @bot.event
 async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send('The command you\'re tryin'
+        'g to use does not exist. Use !help for more information on available'
+        ' commands.')
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('You do not have the permissions required to use this c'
         'ommand.')
