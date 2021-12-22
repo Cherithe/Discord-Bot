@@ -84,7 +84,7 @@ class Music(commands.Cog):
             await ctx.voice_client.disconnect()
 
     @commands.command(name='play', help='Plays audio of a youtube video based on keyword/url.')
-    async def play(self, ctx, *, url):         
+    async def play(self, ctx, *, url):
         vc = ctx.message.guild.voice_client
         if vc.is_playing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
