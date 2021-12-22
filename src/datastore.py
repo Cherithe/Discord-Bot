@@ -11,8 +11,7 @@ initial_obj = {
 
 
 class Datastore:
-    """Stores the data for users and guilds in the Discord Bot.
-    """
+    """Stores the data for users and guilds in the Discord Bot."""
 
     def __init__(self):
         """Initialises the data_store object.

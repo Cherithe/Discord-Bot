@@ -46,9 +46,12 @@ async def on_ready():
             'filter': False,
             'queue': [],
         })
-        data_store.set(data)
         print('A new guild profile has been created for '
              f'{guild.name} (id: {guild.id})')
+    else:
+        # Clears the queue for the guild
+        guilds[f'{guild.id}']['queue'].clear()
+    data_store.set(data)
 
 @bot.event
 async def GuildLeaveEvent(guild):

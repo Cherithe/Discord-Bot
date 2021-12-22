@@ -95,7 +95,7 @@ class Music(commands.Cog):
         vc = ctx.message.guild.voice_client
         if vc.is_playing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            await ctx.send('**Added:** {} to queue'.format(player.title))
+            await ctx.send(f'**Added:** {format(player.title)} at position {str(len(queue) + 1)} in queue.')
             queue.append(player.title)
         else:
             async with ctx.typing():
@@ -143,11 +143,11 @@ class Music(commands.Cog):
         queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
         queue_list = ''
         for count, item in enumerate(queue, 1):
-            queue_list += f'**[{count}]**: {item}\n\n'
+            queue_list += f'**[{count}]**:   {item}\n\n'
         if queue_list == '':
-            queue_list = 'The queue is empty! Add more songs using !play.'
-        embed = discord.Embed(title=f'UP NEXT', description=f"The queue for {ctx.guild.name}:", color=discord.Color.blurple())
-        embed.add_field(name = f'Queue', value = queue_list, inline = False)
+            queue_list = 'The queue is currently empty! Add more songs using !play.'
+        embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
+        embed.add_field(name = f'Up next:', value = queue_list, inline = False)
         await ctx.send(embed=embed)
 
     @play.before_invoke
