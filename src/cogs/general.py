@@ -64,5 +64,26 @@ class General(commands.Cog):
         embed.set_image(url=user.avatar_url)
         await ctx.send(embed=embed)
 
+    @commands.command(name='history', help='Finds all recent messages which contain keyword')
+    async def history(self, ctx, *, keywords = None):
+        if keywords is None:
+            await ctx.send('This command must be entered with a keyword!')
+        history_list = ''
+        messages = await ctx.channel.history(limit=200).flatten()
+        self = True
+        for msg in messages:
+            if keywords in msg.content and not self:
+                history_list += f"{msg.author}: {msg.content}\n{msg.jump_url}\n\n"
+
+            self = False
+
+        if history_list == '':
+            await ctx.send("There were no messages with the given keyword found!")
+        else:
+            embed = discord.Embed(title=f'History', color=discord.Color.blurple())
+            embed.add_field(name = f'Recent messages with "{keywords}":', value = history_list, inline = False)
+            await ctx.send(embed=embed)
+
+
 def setup(bot):
     bot.add_cog(General(bot))
