@@ -133,9 +133,19 @@ class Music(commands.Cog):
     @commands.command(name='skip', help='Skips the current-playing song.')
     async def skip(self, ctx):
         vc = ctx.message.guild.voice_client
-        vc.stop()
+        vc.pause()
         await ctx.send('Skipped.')
         await play_next(self, ctx)
+
+    @commands.command(name='clear', help='Clears the existing queue.')
+    async def stop(self, ctx):
+        data = data_store.get()
+        queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
+        queue.clear()
+        data_store.set(data)
+        vc = ctx.message.guild.voice_client
+        vc.stop()
+        await ctx.send('Bot has stopped playing.')
 
     @commands.command(aliases=['q'], help='Prints the currently queued songs.')
     async def queue(self, ctx):
