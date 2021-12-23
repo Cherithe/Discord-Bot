@@ -73,8 +73,9 @@ class General(commands.Cog):
         self = True
         for msg in messages:
             if keywords in msg.content and not self:
-                history_list += f"{msg.author}: {msg.content}\n{msg.jump_url}\n\n"
-
+                timestamp = msg.created_at.strftime("%d/%m/%Y")
+                print(f"{timestamp}")
+                history_list += f"{msg.author} at {timestamp}: {msg.content}\n{msg.jump_url}\n\n"
             self = False
 
         if history_list == '':
