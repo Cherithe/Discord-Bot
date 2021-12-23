@@ -52,7 +52,14 @@ class General(commands.Cog):
         await ctx.send(response)
 
     @commands.command(name='pfp', help='Blows up the profile picture of mentioned user.')
-    async def pfp(self, ctx, user: discord.User):
+    async def pfp(self, ctx):
+        if len(ctx.message.mentions) == 0:
+            user = ctx.author
+        elif len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+        else:
+            await ctx.send('Try again, but this time just mention only one user. Thanks.')
+            return
         embed = discord.Embed(title=f'WOW', description=f"{user}'s profile picture", color=discord.Color.blurple())
         embed.set_image(url=user.avatar_url)
         await ctx.send(embed=embed)

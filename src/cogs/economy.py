@@ -28,15 +28,22 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='profile', help='Shows your user profile')
+    @commands.command(name='profile', help='Shows user profile of the mentioned user')
     async def profile(self, ctx):
-        create_user(ctx.author)
+        if len(ctx.message.mentions) == 0:
+            user = ctx.author
+        elif len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+        else:
+            await ctx.send('Try again, but this time just mention only one user. Thanks.')
+            return
+        create_user(user)
         data = data_store.get()
-        user = data['users'][f'{ctx.author.id}']
-        embed = discord.Embed(title='USER PROFILE', description=f'{ctx.author}\'s user profile', color=discord.Color.blurple())
-        embed.add_field(name = f'Account Balance:', value = f'{user["money"]} coins', inline = False)
+        profile = data['users'][f'{user.id}']
+        embed = discord.Embed(title='USER PROFILE', description=f'{user}\'s user profile', color=discord.Color.blurple())
+        embed.add_field(name = f'Account Balance:', value = f'{profile["money"]} coins', inline = False)
         embed.add_field(name = f'Inventory:', value = 'N/A', inline = False) # NOT YET IMPLEMENTED
-        embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
+        embed.set_footer(text=user.name, icon_url = user.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(name='daily', help='Get your daily allowance!')
@@ -46,14 +53,18 @@ class Economy(commands.Cog):
         user = data['users'][f'{ctx.author.id}']
         now = datetime.now()
         delta = now - datetime.fromtimestamp(float(user['daily']['last_claim']))
+        # Checks when the last allowance was collected.
         if delta < timedelta(hours=24):
+            delta = 24 + (delta.seconds // -3600)
             await ctx.send('You already claimed your daily allowance for '
-                            'today. Be more patient!')
+                            f'today. Be more patient! You have {str(delta)} hours remaining '
+                            'until your next allowance can be collected.')
             return
         if delta < timedelta(hours=48):
             user['daily']['streak'] = str(int(user['daily']['streak']) + 1)
         else:
             user['daily']['streak'] = 0
+        # Calculates allowance total and sends appropriate message.
         money = int(50 * (1 + 0.2 * int(user['daily']['streak'])))
         user['money'] = str(int(user['money']) + money)
         response = f'Thanks for stopping by! <@{ctx.author.id}> received {money} coins today.'
@@ -66,6 +77,12 @@ class Economy(commands.Cog):
         user['daily']['last_claim'] = str(now.timestamp())
         data_store.set(data)
         await ctx.send(response)
+
+    @commands.command(name='leaderboards', help='See the server rankings.')
+    async def leaderboards(self, ctx):
+        data = data_store.get()
+        users = data['users']
+        # NOT IMPLEMENTED YET
 
 def setup(bot):
     bot.add_cog(Economy(bot))
