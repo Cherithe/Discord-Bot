@@ -35,7 +35,7 @@ async def play_next(self, ctx):
     queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
     vc = ctx.message.guild.voice_client
     # Pops the first item from the queue
-    player = await YTDLSource.from_url(queue.pop(0), loop=self.bot.loop)
+    player = await YTDLSource.from_url(queue.pop(0), loop=self.bot.loop, stream=True)
     data_store.set(data)
     await ctx.send('**Now playing:** {}'.format(player.title))
     print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
