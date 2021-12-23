@@ -80,7 +80,7 @@ class General(commands.Cog):
         if history_list == '':
             await ctx.send("There were no messages with the given keyword found!")
         else:
-            embed = discord.Embed(title=f'History', color=discord.Color.blurple())
+            embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
             embed.add_field(name = f'Recent messages with "{keywords}":', value = history_list, inline = False)
             await ctx.send(embed=embed)
 
