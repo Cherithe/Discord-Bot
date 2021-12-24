@@ -71,11 +71,14 @@ class General(commands.Cog):
         history_list = ''
         messages = await ctx.channel.history(limit=200).flatten()
         self = True
+        msg_count = 0
         for msg in messages:
+            if msg_count > 5:
+                break
             if keywords in msg.content and not self:
                 timestamp = msg.created_at.strftime("%d/%m/%Y")
-                print(f"{timestamp}")
                 history_list += f"{msg.author} at {timestamp}: {msg.content}\n{msg.jump_url}\n\n"
+                msg_count += 1
             self = False
 
         if history_list == '':
