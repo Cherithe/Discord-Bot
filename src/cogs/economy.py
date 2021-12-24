@@ -78,11 +78,19 @@ class Economy(commands.Cog):
         data_store.set(data)
         await ctx.send(response)
 
-    @commands.command(name='leaderboards', help='See the server rankings.')
-    async def leaderboards(self, ctx):
+    @commands.command(name='leaderboard', help='See the server rankings.')
+    async def leaderboard(self, ctx):
         data = data_store.get()
         users = data['users']
-        # NOT IMPLEMENTED YET
+        leaderboard = ''
+        for rank, user in enumerate(sorted(users.items(), key=lambda x: x[1]['money'])[:5]):
+            name = await self.bot.fetch_user(user[0])
+            leaderboard += f"**#{rank + 1}** {name}: {user[1]['money']} coins\n\n"
+        embed = discord.Embed(title=f'LEADERBOARD', color=discord.Color.blurple())
+        embed.add_field(name = f'Richest people on this server:', value = leaderboard, inline = False)
+        await ctx.send(embed=embed)
+
+
 
 def setup(bot):
     bot.add_cog(Economy(bot))

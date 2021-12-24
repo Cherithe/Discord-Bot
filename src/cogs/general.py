@@ -73,7 +73,7 @@ class General(commands.Cog):
         self = True
         msg_count = 0
         for msg in messages:
-            if msg_count > 5:
+            if msg_count >= 5:
                 break
             if keywords in msg.content and not self:
                 timestamp = msg.created_at.strftime("%d/%m/%Y")
