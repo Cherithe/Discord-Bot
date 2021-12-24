@@ -35,10 +35,11 @@ async def play_next(self, ctx):
     queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
     vc = ctx.message.guild.voice_client
     # Pops the first item from the queue
-    player = await YTDLSource.from_url(queue.pop(0), loop=self.bot.loop, stream=True)
-    data_store.set(data)
-    await ctx.send('**Now playing:** {}'.format(player.title))
-    print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
+    video_data = queue.pop(0)
+    player = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
+    data_store.set(data.keys())
+    await ctx.send(f'**Now playing:** {player.title} **[{video_data["duration"]}]**')
+    print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{video_data["duration"]}]')
     vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -57,7 +58,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             # take first item from a playlist
             data = data['entries'][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        return {'player': cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data), 'duration': data['duration']}
 
 
 class Music(commands.Cog):
@@ -88,22 +89,39 @@ class Music(commands.Cog):
         else:
             await ctx.voice_client.disconnect()
 
-    @commands.command(name='play', help='Plays audio of a youtube video based on keyword/url.')
+    @commands.command(name='play', help='Plays audio of the YouTube video that best matches the given keyword/url.')
     async def play(self, ctx, *, url):
         data = data_store.get()
         queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
         vc = ctx.message.guild.voice_client
         if vc.is_playing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            await ctx.send(f'**Added:** {format(player.title)} at position {str(len(queue) + 1)} in queue.')
-            queue.append(player.title)
+            video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+            # If the video is longer than 35 minutes, cancel download and return with error message.
+            if video_data['duration'] > 2100:
+                await ctx.send('Sorry, but the video you are trying to pla'
+                                   'y is longer than 35 minutes. Try using !pl'
+                                   'ay again but this time with a video of a s'
+                                   'horter length.')
+                return
+            player = video_data['player']
+            duration = f'{str(int(video_data["duration"]) // 60)}:{"%02d" % (int(video_data["duration"]) % 60)}'
+            await ctx.send(f'**Added:** {format(player.title)} **[{duration}]** at position {str(len(queue) + 1)} in queue.')
+            queue.append({'title': player.title, 'duration': duration})
         else:
             async with ctx.typing():
-                player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-                queue.append(player.title)
+                video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+                if video_data['duration'] > 2100:
+                    await ctx.send('Sorry, but the video you are trying to pla'
+                                   'y is longer than 35 minutes. Try using !pl'
+                                   'ay again but this time with a video of a s'
+                                   'horter length.')
+                    return
+                player = video_data['player']
+                duration = f'{str(int(video_data["duration"]) // 60)}:{"%02d" % (int(video_data["duration"]) % 60)}'
+                queue.append({'title': player.title, 'duration': duration})
                 vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
-            await ctx.send('**Now playing:** {}'.format(player.title))
-            print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title}')
+            await ctx.send(f'**Now playing:** {player.title} **[{duration}]**')
+            print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{duration}]')
             # Removes the first item from the queue
             queue.pop(0)
         data_store.set(data)
@@ -152,12 +170,15 @@ class Music(commands.Cog):
         data = data_store.get()
         queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
         queue_list = ''
+        duration_list = ''
         for count, item in enumerate(queue, 1):
-            queue_list += f'**[{count}]**:   {item}\n\n'
+            queue_list += f'**[{count}]**:   {item["title"]}\n\n'
+            duration_list += f'**[{item["duration"]}]**\n\n'
         if queue_list == '':
             queue_list = 'The queue is currently empty! Add more songs using !play.'
         embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
-        embed.add_field(name = f'Up next:', value = queue_list, inline = False)
+        embed.add_field(name = f'Up next:', value = queue_list, inline = True)
+        embed.add_field(name = '\u200b', value = duration_list, inline = True)
         await ctx.send(embed=embed)
 
     @play.before_invoke
