@@ -15,7 +15,6 @@ class Datastore:
 
     def __init__(self):
         """Initialises the data_store object.
-
         The data is initialised with the data from the persistence.json
         file. If this file does not exist, then the data is initialised
         from the initial object.
@@ -31,7 +30,6 @@ class Datastore:
 
     def get(self):
         """Returns the data stored in the data store.
-
         Return Value:
             Returns a dictionary containing the profiles of the users and guilds.
         """
@@ -40,11 +38,9 @@ class Datastore:
 
     def set(self, store):
         """Sets the data in the data store.
-
         Stores the data given in store in the data store and writes the
         data to the persistence.json file so that the data can be loaded
         when the data store is initialised.
-
         Arguments:
             store           (dict)   - The data to store in the data store.
         """
