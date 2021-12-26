@@ -172,13 +172,16 @@ class Music(commands.Cog):
         queue_list = ''
         duration_list = ''
         for count, item in enumerate(queue, 1):
-            queue_list += f'**[{count}]**:   {item["title"]}\n\n'
+            queue_list += f'**[{count}]**:    {item["title"]}\n\n'
             duration_list += f'**[{item["duration"]}]**\n\n'
+            if len(item['title']) > 65:
+                duration_list += '\n'
         if queue_list == '':
             queue_list = 'The queue is currently empty! Add more songs using !play.'
         embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
         embed.add_field(name = f'Up next:', value = queue_list, inline = True)
-        embed.add_field(name = '\u200b', value = duration_list, inline = True)
+        if duration_list != '':
+            embed.add_field(name = '\u200b', value = duration_list, inline = True)
         await ctx.send(embed=embed)
 
     @play.before_invoke

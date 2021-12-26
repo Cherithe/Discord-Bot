@@ -8,7 +8,12 @@ from discord.ext import commands
 
 from datastore import data_store
 
-def create_user(user):
+def create_user(user: dict):
+    """Checks if the user calling an economy command has a profile.
+    If they do not, create a new user profile for them and append to global
+    list of users.
+    """
+
     data = data_store.get()
     users = data['users']
     if not f'{user.id}' in users:
@@ -23,6 +28,17 @@ def create_user(user):
         print('A new user profile has been created for '
              f'{user} (id: {user.id})')
     return
+
+def server_users(users: dict, ctx):
+    """Returns a list of existing user profiles for all server members."""
+    server_list = []
+    for member in ctx.guild.members:
+        user = users.get(f'{member.id}')
+        if not user is None:
+            user['id'] = f'{member.id}'
+            server_list.append(user)
+    return server_list 
+
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -81,16 +97,17 @@ class Economy(commands.Cog):
     @commands.command(name='leaderboard', help='See the server rankings.')
     async def leaderboard(self, ctx):
         data = data_store.get()
-        users = data['users']
         leaderboard = ''
-        for rank, user in enumerate(sorted(users.items(), key=lambda x: x[1]['money'])[:5]):
-            name = await self.bot.fetch_user(user[0])
-            leaderboard += f"**#{rank + 1}** {name}: {user[1]['money']} coins\n\n"
+        users = server_users(data['users'], ctx)
+        for rank, user in enumerate(sorted(users, key=lambda x: x['money'])[:5]):
+            name = await self.bot.fetch_user(user['id'])
+            leaderboard += f"**#{rank + 1}** {name}: {user['money']} coins\n\n"
+        if leaderboard == '':
+            leaderboard = ('This server\'s leaderboard is empty! To get started with using economy commands and'
+            ' earning currency, use !help economy.')
         embed = discord.Embed(title=f'LEADERBOARD', color=discord.Color.blurple())
-        embed.add_field(name = f'Richest people on this server:', value = leaderboard, inline = False)
+        embed.add_field(name = f'Richest people on {ctx.guild.name}:', value = leaderboard, inline = False)
         await ctx.send(embed=embed)
-
-
 
 def setup(bot):
     bot.add_cog(Economy(bot))
