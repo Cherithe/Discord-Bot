@@ -88,6 +88,13 @@ class General(commands.Cog):
             embed.add_field(name = f'Recent messages with "{keywords}":', value = history_list, inline = False)
             await ctx.send(embed=embed)
 
+    @commands.command(name='pogwall', help='It\'s a...distraction of sorts.')
+    async def pogwall(self, ctx):
+        await ctx.message.add_reaction("🇵")
+        await ctx.message.add_reaction("🇴")
+        await ctx.message.add_reaction("🇬")
+        for _ in range(4):
+            await ctx.send(25 * '<a:pogwall:924834583600566333>')
 
 def setup(bot):
     bot.add_cog(General(bot))

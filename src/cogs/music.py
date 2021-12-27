@@ -88,6 +88,7 @@ class Music(commands.Cog):
             await ctx.send('I am not connected to any channels.')
         else:
             await ctx.voice_client.disconnect()
+            await ctx.message.add_reaction("👋")
 
     @commands.command(name='play', help='Plays audio of the YouTube video that best matches the given keyword/url.')
     async def play(self, ctx, *, url):
