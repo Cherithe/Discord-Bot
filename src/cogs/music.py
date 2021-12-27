@@ -125,6 +125,7 @@ class Music(commands.Cog):
             # Removes the first item from the queue
             queue.pop(0)
         data_store.set(data)
+        print('a')
 
     @commands.command(name='pause', help='Pauses any audio playing from the bot.')
     async def pause(self, ctx):
