@@ -122,9 +122,8 @@ class General(commands.Cog):
                 else:
                     await msg.remove_reaction(reaction, user)
             except asyncio.TimeoutError:
-                await msg.delete()
+                await ctx.send("The history page has timed out.")
                 break
-            # ending the loop if user doesn't react after x seconds
 
     @commands.command(name='pogwall', help='It\'s a...distraction of sorts.')
     async def pogwall(self, ctx):
