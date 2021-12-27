@@ -1,5 +1,6 @@
 """This file contains the cog for general commands."""
 
+import asyncio
 import discord
 from discord.ext import commands
 import random
@@ -68,25 +69,62 @@ class General(commands.Cog):
     async def history(self, ctx, *, keywords = None):
         if keywords is None:
             await ctx.send('This command must be entered with a keyword!')
-        history_list = ''
+        page = ''
+        pages = []
         messages = await ctx.channel.history(limit=200).flatten()
         self = True
         msg_count = 0
         for msg in messages:
-            if msg_count >= 5:
-                break
             if keywords in msg.content and not self:
+                if msg_count >= 5:
+                    msg_count = 0
+                    pages.append(page)
+                    page = ''
                 timestamp = msg.created_at.strftime("%d/%m/%Y")
-                history_list += f"{msg.author} at {timestamp}: {msg.content}\n{msg.jump_url}\n\n"
+                page += f"{msg.author} at {timestamp}: {msg.content}\n{msg.jump_url}\n\n"
                 msg_count += 1
             self = False
 
-        if history_list == '':
+        pages.append(page)
+        if pages[0] == '':
             await ctx.send("There were no messages with the given keyword found!")
-        else:
-            embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
-            embed.add_field(name = f'Recent messages with "{keywords}":', value = history_list, inline = False)
-            await ctx.send(embed=embed)
+            return
+
+        page_len = len(pages)
+        embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
+        embed.add_field(name = f'Recent messages with "{keywords}":\n\nPage 1 out of {page_len}', value = pages[0], inline = False)
+        msg = await ctx.send(embed=embed)
+        await msg.add_reaction("⬅")
+        await msg.add_reaction("➡")
+
+        index = 0
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["⬅", "➡"]
+
+        while True:
+            try:
+                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check)
+                if str(reaction.emoji) == "➡" and index != page_len:
+                    index += 1
+                    new_embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
+                    new_embed.add_field(name = f'Recent messages with "{keywords}":\n\nPage {index + 1} out of {page_len}', value = pages[index], inline = False)
+                    await msg.edit(embed = new_embed)
+                    await msg.remove_reaction(reaction, user)
+
+                elif str(reaction.emoji) == "⬅" and index > 0:
+                    index -= 1
+                    new_embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
+                    new_embed.add_field(name = f'Recent messages with "{keywords}":\n\nPage {index + 1} out of {page_len}', value = pages[index], inline = False)
+                    await msg.edit(embed = new_embed)
+                    await msg.remove_reaction(reaction, user)
+
+                else:
+                    await msg.remove_reaction(reaction, user)
+            except asyncio.TimeoutError:
+                await msg.delete()
+                break
+            # ending the loop if user doesn't react after x seconds
 
     @commands.command(name='pogwall', help='It\'s a...distraction of sorts.')
     async def pogwall(self, ctx):
