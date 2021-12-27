@@ -37,7 +37,7 @@ def server_users(users: dict, ctx):
         if not user is None:
             user['id'] = f'{member.id}'
             server_list.append(user)
-    return server_list 
+    return server_list
 
 
 class Economy(commands.Cog):
