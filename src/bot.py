@@ -13,7 +13,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
 intents = discord.Intents().all()
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, 
+                   help_command=commands.DefaultHelpCommand(no_category='Help'))
 
 print('Loading Cogs...\n')
 for filename in os.listdir('./cogs'):

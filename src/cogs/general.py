@@ -92,7 +92,7 @@ class General(commands.Cog):
 
         page_len = len(pages)
         embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
-        embed.add_field(name = f'Recent messages with "{keywords}":\n\nPage 1 out of {page_len}', value = pages[0], inline = False)
+        embed.add_field(name=f'Recent messages with "{keywords}":\n\nPage 1 out of {page_len}', value=pages[0], inline=False)
         msg = await ctx.send(embed=embed)
         await msg.add_reaction("⬅")
         await msg.add_reaction("➡")
@@ -108,15 +108,15 @@ class General(commands.Cog):
                 if str(reaction.emoji) == "➡" and index != page_len:
                     index += 1
                     new_embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
-                    new_embed.add_field(name = f'Recent messages with "{keywords}":\n\nPage {index + 1} out of {page_len}', value = pages[index], inline = False)
-                    await msg.edit(embed = new_embed)
+                    new_embed.add_field(name=f'Recent messages with "{keywords}":\n\nPage {index + 1} out of {page_len}', value=pages[index], inline=False)
+                    await msg.edit(embed=new_embed)
                     await msg.remove_reaction(reaction, user)
 
                 elif str(reaction.emoji) == "⬅" and index > 0:
                     index -= 1
                     new_embed = discord.Embed(title=f'HISTORY', color=discord.Color.blurple())
-                    new_embed.add_field(name = f'Recent messages with "{keywords}":\n\nPage {index + 1} out of {page_len}', value = pages[index], inline = False)
-                    await msg.edit(embed = new_embed)
+                    new_embed.add_field(name=f'Recent messages with "{keywords}":\n\nPage {index + 1} out of {page_len}', value=pages[index], inline=False)
+                    await msg.edit(embed=new_embed)
                     await msg.remove_reaction(reaction, user)
 
                 else:
