@@ -10,7 +10,7 @@ class Moderation(commands.Cog):
         self._filterOn = False
         # The words from BannedWords.txt which contain profanity and slurs to be
         # filtered out.
-        with open('BannedWords.txt', 'r') as f:
+        with open('src/BannedWords.txt', 'r') as f:
             self._banned_words = f.read().split()
 
     @commands.Cog.listener()
