@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix='!', intents=intents,
                    help_command=commands.DefaultHelpCommand(no_category='Help'))
 
 print('Loading Cogs...\n')
-for filename in os.listdir('./cogs'):
+for filename in os.listdir('src/cogs'):
   if filename.endswith('.py'):
     bot.load_extension(f'cogs.{filename[:-3]}')
 
@@ -30,29 +30,27 @@ async def on_ready():
     """
 
     for guild in bot.guilds:
-        if guild.name == GUILD:
-            break
-    print(f'{bot.user} is connected to the following guild:\n'
-          f'{guild.name} (id: {guild.id})\n')
+        print(f'{bot.user} is connected to the following guild:\n'
+            f'{guild.name} (id: {guild.id})\n')
 
-    members = '\n - '.join([member.name for member in guild.members])
-    print(f'Guild Members:\n - {members}\n')
+        members = '\n - '.join([member.name for member in guild.members])
+        print(f'Guild Members:\n - {members}\n')
 
-    # If a profile for the guild does not already exist, append a new one onto
-    # the list of guilds.
-    data = data_store.get()
-    guilds = data['guilds']
-    if not f'{guild.id}' in guilds:
-        guilds[f'{guild.id}'] = ({
-            'filter': False,
-            'queue': [],
-        })
-        print('A new guild profile has been created for '
-             f'{guild.name} (id: {guild.id})')
-    else:
-        # Clears the queue for the guild
-        guilds[f'{guild.id}']['queue'].clear()
-    data_store.set(data)
+        # If a profile for the guild does not already exist, append a new one onto
+        # the list of guilds.
+        data = data_store.get()
+        guilds = data['guilds']
+        if not f'{guild.id}' in guilds:
+            guilds[f'{guild.id}'] = ({
+                'filter': False,
+                'queue': [],
+            })
+            print('A new guild profile has been created for '
+                f'{guild.name} (id: {guild.id})')
+        else:
+            # Clears the queue for the guild
+            guilds[f'{guild.id}']['queue'].clear()
+        data_store.set(data)
 
 @bot.event
 async def GuildLeaveEvent(guild):
