@@ -100,10 +100,10 @@ class Music(commands.Cog):
                 await ctx.send('The queue for this server is full. Wait for so'
                                'ngs to finish before adding more.')
             video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            # If the video is longer than 35 minutes, cancel download and return with error message.
-            if video_data['duration'] > 2100:
+            # If the video is longer than 60 minutes, cancel download and return with error message.
+            if video_data['duration'] > 3600:
                 await ctx.send('Sorry, but the video you are trying to pla'
-                                   'y is longer than 35 minutes. Try using !pl'
+                                   'y is longer than 60 minutes. Try using !pl'
                                    'ay again but this time with a video of a s'
                                    'horter length.')
                 return
