@@ -201,7 +201,7 @@ class Music(commands.Cog):
             queue_pages.append(queue_list)
             duration_pages.append(duration_list)
         if queue_pages == []:
-            queue_pages.append('The queue is currently empty! Add more songs using !play.')
+            queue_pages.append('The queue is currently empty! Add more songs using ?play.')
         page_len = len(queue_pages)
         embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
         embed.add_field(name=f'Page 1 out of {page_len}', value=queue_pages[0], inline=True)
