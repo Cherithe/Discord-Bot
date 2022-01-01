@@ -36,8 +36,9 @@ async def play_next(self, ctx):
     vc = ctx.message.guild.voice_client
     # Pops the first item from the queue
     video_data = queue.pop(0)
-    player = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
-    data_store.set(data.keys())
+    player_data = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
+    player = player_data['player']
+    data_store.set(data)
     await ctx.send(f'**Now playing:** {player.title} **[{video_data["duration"]}]**')
     print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{video_data["duration"]}]')
     vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
@@ -98,7 +99,7 @@ class Music(commands.Cog):
         if vc.is_playing():
             if len(queue) == 50:
                 await ctx.send('The queue for this server is full. Wait for so'
-                               'ngs to finish before adding more.')
+                               'ngs to play before adding more.')
             video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
             # If the video is longer than 60 minutes, cancel download and return with error message.
             if video_data['duration'] > 3600:
@@ -114,11 +115,11 @@ class Music(commands.Cog):
         else:
             async with ctx.typing():
                 video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-                if video_data['duration'] > 2100:
+                if video_data['duration'] > 3600:
                     await ctx.send('Sorry, but the video you are trying to pla'
-                                   'y is longer than 35 minutes. Try using !pl'
-                                   'ay again but this time with a video of a s'
-                                   'horter length.')
+                                    'y is longer than 60 minutes. Try using !pl'
+                                    'ay again but this time with a video of a s'
+                                    'horter length.')
                     return
                 player = video_data['player']
                 duration = f'{str(int(video_data["duration"]) // 60)}:{"%02d" % (int(video_data["duration"]) % 60)}'

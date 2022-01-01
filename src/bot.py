@@ -14,7 +14,9 @@ GUILD = os.getenv('DISCORD_GUILD')
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='?', intents=intents, 
-                   help_command=commands.DefaultHelpCommand(no_category='Help'))
+                   help_command=commands.DefaultHelpCommand(no_category='Help'),
+                   activity = discord.Activity(type=discord.ActivityType.watching,
+                   name="2022! | Use ?help to get started."))
 
 print('Loading Cogs...\n')
 for filename in os.listdir('src/cogs'):

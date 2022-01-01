@@ -47,11 +47,14 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.command(name='clean', help='Deletes a given number of messages.')
     async def clean(self, ctx, number):
-        if int(number) <= 0:
+        if number.isdigit() is False or int(number) <= 0:
             await ctx.send('Invalid number of messages to delete.')
             return
         await ctx.channel.purge(limit=(int(number) + 1))
-        if int(number) > 1:
+        if int(number) > 100:
+            await ctx.send('You sure about that?')
+            return
+        elif int(number) > 1:
             response = f'{number} messages have been deleted.'
         else:
             response = '1 message has been deleted. Happy?'
