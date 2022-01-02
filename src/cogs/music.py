@@ -1,11 +1,16 @@
 import asyncio
+import os
 
 import discord
 import youtube_dl
 
 from discord.ext import commands
+from dotenv import load_dotenv
 
 from datastore import data_store
+
+load_dotenv()
+BOT_ID = os.getenv('BOT_ID')
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -39,7 +44,8 @@ async def play_next(self, ctx):
     player_data = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
     player = player_data['player']
     data_store.set(data)
-    await ctx.send(f'**Now playing:** {player.title} **[{video_data["duration"]}]**')
+    embed = discord.Embed(title='NOW PLAYING', description=f'{player.title} **[{video_data["duration"]}]**', color=discord.Color.blurple())
+    await ctx.send(embed=embed)
     print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{video_data["duration"]}]')
     vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
 
@@ -72,7 +78,7 @@ class Music(commands.Cog):
             return await ctx.send('You must be connected to a voice channel to use this command.')
         voice_channel = ctx.author.voice.channel
         # Checks if the bot_id is in the list of user_ids connected to the author's voice channel.
-        if 919765855435366490 in ctx.author.voice.channel.voice_states.keys():
+        if BOT_ID in ctx.author.voice.channel.voice_states.keys():
             return await ctx.send('I am already connected to your voice channel. Check again!')
         if ctx.voice_client is None:
             await voice_channel.connect()
@@ -125,7 +131,8 @@ class Music(commands.Cog):
                 duration = f'{str(int(video_data["duration"]) // 60)}:{"%02d" % (int(video_data["duration"]) % 60)}'
                 queue.append({'title': player.title, 'duration': duration})
                 vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
-            await ctx.send(f'**Now playing:** {player.title} **[{duration}]**')
+                embed = discord.Embed(title='NOW PLAYING', description=f'{player.title} **[{duration}]**', color=discord.Color.blurple())
+            await ctx.send(embed=embed)
             print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{duration}]')
             # Removes the first item from the queue
             queue.pop(0)
@@ -161,14 +168,12 @@ class Music(commands.Cog):
         await play_next(self, ctx)
 
     @commands.command(name='clear', help='Clears the existing queue.')
-    async def stop(self, ctx):
+    async def clear(self, ctx):
         data = data_store.get()
         queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
         queue.clear()
         data_store.set(data)
-        vc = ctx.message.guild.voice_client
-        vc.stop()
-        await ctx.send('Bot has stopped playing.')
+        await ctx.send('The queue has been cleared.')
 
     @commands.command(name='remove', help='Removes a song from the queue.')
     async def remove(self, ctx, item=None):
@@ -190,7 +195,7 @@ class Music(commands.Cog):
         queue_list = duration_list = ''
         for count, item in enumerate(queue, 1):
             # Limits the number of items on each page to 5 maximum.
-            if count % 6 == 0:
+            if count != 1 and count % 5 == 1:
                 queue_pages.append(queue_list)
                 duration_pages.append(duration_list)
                 queue_list = duration_list = ''
@@ -243,6 +248,28 @@ class Music(commands.Cog):
                         await msg.remove_reaction(reaction, user)
                 except asyncio.TimeoutError:
                     await ctx.send("The queue display has timed out.")
+                    break
+    
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """Disconnects the bot from the voice channel if it is idle for
+        more than 5 minutes.
+        """
+        if not member.id == self.bot.user.id:
+            return
+
+        elif before.channel is None:
+            voice = after.channel.guild.voice_client
+            time = 0
+            while True:
+                # Increments the timer by one for every second the bot is inactive.
+                await asyncio.sleep(1)
+                time = time + 1
+                if voice.is_playing() and not voice.is_paused():
+                    time = 0
+                if time == 300:
+                    await voice.disconnect()
+                if not voice.is_connected():
                     break
 
     @play.before_invoke
