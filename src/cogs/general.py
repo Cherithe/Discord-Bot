@@ -22,6 +22,7 @@ class General(commands.Cog):
             return
         rating = random.choice(range(0, 11))
         response = f'I give {subject} a {str(rating)}/10.'
+        # Adds flavour statements depending on the rating given.
         if rating <= 2:
             response += ' Sorry but not really.'
         elif rating <= 4:
@@ -35,15 +36,16 @@ class General(commands.Cog):
         await ctx.send(response)
 
     @commands.command(name='8ball', help='Gives a burning response to your burning question.')
-    async def eight_ball(self, ctx, *, arg = None):
-        if arg is None:
+    async def eight_ball(self, ctx, *, query = None):
+        if query is None:
             await ctx.send('Even a magician can\'t see the future if you don\'t'
                            ' give them anything to work with.')
             return
-        if arg[-1] != '?':
+        # If the statement given does not end with a question mark, raise an error.
+        if query[-1] != '?':
             await ctx.send('So... are we going to be here all day or are you going to ask me a question?')
-            print(type(arg[-1]))
-            print(arg[-1])
+            print(type(query[-1]))
+            print(query[-1])
             return
         responses = ['As I see it, yes.', 'Ask again later.', 'Better not tell you now.', 'Cannot predict now.', 'Concentrate and ask again.',
              'Don\'t count on it.', 'It is certain.', 'It is decidedly so.', 'Most likely.', 'My reply is no.', 'My sources say no.',
@@ -54,10 +56,12 @@ class General(commands.Cog):
 
     @commands.command(name='pfp', help='Blows up the profile picture of mentioned user.')
     async def pfp(self, ctx):
+        # If no user is mentioned, then set user to the author of the sent command.
         if len(ctx.message.mentions) == 0:
             user = ctx.author
         elif len(ctx.message.mentions) == 1:
             user = ctx.message.mentions[0]
+        # If ctx.message.mentions contains more than one user, raise an error.
         else:
             await ctx.send('Try again, but this time just mention only one user. Thanks.')
             return
@@ -65,12 +69,13 @@ class General(commands.Cog):
         embed.set_image(url=user.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(name='history', help='Finds all recent messages which contain keyword')
+    @commands.command(name='history', help='Finds all recent messages which contain keyword.')
     async def history(self, ctx, *, keywords = None):
         if keywords is None:
             await ctx.send('This command must be entered with a keyword!')
         page = ''
         pages = []
+        # Returns the recent channel history as one long list.
         messages = await ctx.channel.history(limit=200).flatten()
         self = True
         msg_count = 0
@@ -98,7 +103,8 @@ class General(commands.Cog):
         await msg.add_reaction("➡")
 
         index = 0
-
+        # Hangs on after the history embed has been sent to check for user reactions.
+        # Acts as a scrolling mechanism for the pages for recent history, and times out after 1 minute.
         def check(reaction, user):
             return user == ctx.author and str(reaction.emoji) in ["⬅", "➡"]
 
@@ -130,6 +136,8 @@ class General(commands.Cog):
         await ctx.message.add_reaction("🇵")
         await ctx.message.add_reaction("🇴")
         await ctx.message.add_reaction("🇬")
+        # Loops 4 times, sending 25 :pogwall: emotes per line. There is a delay
+        # on Discord if more than 4 lines are attempted to be sent at once.
         for _ in range(4):
             await ctx.send(25 * '<a:pogwall:924834583600566333>')
 

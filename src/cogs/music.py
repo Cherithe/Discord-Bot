@@ -62,7 +62,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
         if 'entries' in data:
-            # take first item from a playlist
+            # if the first item is a playlist, then return only the first item
             data = data['entries'][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return {'player': cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data), 'duration': data['duration']}
@@ -163,8 +163,10 @@ class Music(commands.Cog):
     @commands.command(name='skip', help='Skips the current-playing song.')
     async def skip(self, ctx):
         vc = ctx.message.guild.voice_client
+        # Stops the current song from playing.
         vc.pause()
         await ctx.send('Skipped.')
+        # Loads a new player from the queue and starts playing it.
         await play_next(self, ctx)
 
     @commands.command(name='clear', help='Clears the existing queue.')
@@ -203,6 +205,7 @@ class Music(commands.Cog):
             duration_list += f'**[{item["duration"]}]**\n\n'
             if len(item['title']) > 65:
                 duration_list += '\n'
+        # If there are still items that have not been added, append them all onto a new page.
         if queue_list != '':
             queue_pages.append(queue_list)
             duration_pages.append(duration_list)
@@ -220,7 +223,8 @@ class Music(commands.Cog):
             await msg.add_reaction("⬅")
             await msg.add_reaction("➡")
             index = 0
-
+            # Hangs on after the queue display has been created to check for user reactions.
+            # Acts as a scrolling mechanism for the pages of the queue display, and times out after 1 minute.
             def check(reaction, user):
                 return user == ctx.author and str(reaction.emoji) in ["⬅", "➡"]
 
