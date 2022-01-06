@@ -36,9 +36,11 @@ async def play_next(self, ctx):
     vc = ctx.message.guild.voice_client
     # Pops the first item from the queue
     video_data = queue.pop(0)
-    player = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
-    data_store.set(data.keys())
-    await ctx.send(f'**Now playing:** {player.title} **[{video_data["duration"]}]**')
+    player_data = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
+    player = player_data['player']
+    data_store.set(data)
+    embed = discord.Embed(title='NOW PLAYING', description=f'{player.title} **[{video_data["duration"]}]**', color=discord.Color.blurple())
+    await ctx.send(embed=embed)
     print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{video_data["duration"]}]')
     vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
 
@@ -55,7 +57,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
         if 'entries' in data:
-            # take first item from a playlist
+            # if the first item is a playlist, then return only the first item
             data = data['entries'][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return {'player': cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data), 'duration': data['duration']}
@@ -198,13 +200,76 @@ class Music(commands.Cog):
             duration_list += f'**[{item["duration"]}]**\n\n'
             if len(item['title']) > 65:
                 duration_list += '\n'
-        if queue_list == '':
-            queue_list = 'The queue is currently empty! Add more songs using !play.'
+        # If there are still items that have not been added, append them all onto a new page.
+        if queue_list != '':
+            queue_pages.append(queue_list)
+            duration_pages.append(duration_list)
+        if queue_pages == []:
+            queue_pages.append('The queue is currently empty! Add more songs using ?play.')
+        page_len = len(queue_pages)
         embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
-        embed.add_field(name = f'Up next:', value = queue_list, inline = True)
-        if duration_list != '':
-            embed.add_field(name = '\u200b', value = duration_list, inline = True)
-        await ctx.send(embed=embed)
+        embed.add_field(name=f'Page 1 out of {page_len}', value=queue_pages[0], inline=True)
+        if duration_pages == []:
+            msg = await ctx.send(embed=embed)
+            return
+        embed.add_field(name='\u200b', value=duration_pages[0], inline=True)
+        msg = await ctx.send(embed=embed)
+        if page_len > 1:
+            await msg.add_reaction("⬅")
+            await msg.add_reaction("➡")
+            index = 0
+            # Hangs on after the queue display has been created to check for user reactions.
+            # Acts as a scrolling mechanism for the pages of the queue display, and times out after 1 minute.
+            def check(reaction, user):
+                return user == ctx.author and str(reaction.emoji) in ["⬅", "➡"]
+
+            while True:
+                try:
+                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=60, check=check)
+                    if str(reaction.emoji) == "➡" and index != page_len:
+                        index += 1
+                        new_embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
+                        new_embed.add_field(name=f'Page {index + 1} out of {page_len}', value=queue_pages[index], inline=True)
+                        if duration_pages != []:
+                            new_embed.add_field(name='\u200b', value=duration_pages[index], inline=True)
+                        await msg.edit(embed=new_embed)
+                        await msg.remove_reaction(reaction, user)
+
+                    elif str(reaction.emoji) == "⬅" and index > 0:
+                        index -= 1
+                        new_embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
+                        new_embed.add_field(name=f'Page {index + 1} out of {page_len}', value=queue_pages[index], inline=True)
+                        if duration_pages != []:
+                            new_embed.add_field(name='\u200b', value=duration_pages[index], inline=True)
+                        await msg.edit(embed=new_embed)
+                        await msg.remove_reaction(reaction, user)
+                    else:
+                        await msg.remove_reaction(reaction, user)
+                except asyncio.TimeoutError:
+                    await ctx.send("The queue display has timed out.")
+                    break
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """Disconnects the bot from the voice channel if it is idle for
+        more than 5 minutes.
+        """
+        if not member.id == self.bot.user.id:
+            return
+
+        elif before.channel is None:
+            voice = after.channel.guild.voice_client
+            time = 0
+            while True:
+                # Increments the timer by one for every second the bot is inactive.
+                await asyncio.sleep(1)
+                time = time + 1
+                if voice.is_playing() and not voice.is_paused():
+                    time = 0
+                if time == 300:
+                    await voice.disconnect()
+                if not voice.is_connected():
+                    break
 
     @play.before_invoke
     async def ensure_voice(self, ctx):
