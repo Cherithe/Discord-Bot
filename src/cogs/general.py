@@ -1,9 +1,15 @@
 """This file contains the cog for general commands."""
 
 import asyncio
+import os
+
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 import random
+
+load_dotenv()
+POGWALL = os.getenv('POGWALL')
 
 class General(commands.Cog):
     def __init__(self, bot):
@@ -131,7 +137,7 @@ class General(commands.Cog):
                 await ctx.send("The history page has timed out.")
                 break
 
-    @commands.command(name='pogwall', help='It\'s a...distraction of sorts.')
+    @commands.command(name='pogwall', help='It\'s a... distraction of sorts.')
     async def pogwall(self, ctx):
         await ctx.message.add_reaction("🇵")
         await ctx.message.add_reaction("🇴")
@@ -139,7 +145,7 @@ class General(commands.Cog):
         # Loops 4 times, sending 25 :pogwall: emotes per line. There is a delay
         # on Discord if more than 4 lines are attempted to be sent at once.
         for _ in range(4):
-            await ctx.send(25 * '<a:pogwall:924834583600566333>')
+            await ctx.send(25 * f'{POGWALL}')
 
 def setup(bot):
     bot.add_cog(General(bot))

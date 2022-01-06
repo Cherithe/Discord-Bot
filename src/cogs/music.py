@@ -1,16 +1,11 @@
 import asyncio
-import os
 
 import discord
 import youtube_dl
 
 from discord.ext import commands
-from dotenv import load_dotenv
 
 from datastore import data_store
-
-load_dotenv()
-BOT_ID = os.getenv('BOT_ID')
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -78,7 +73,7 @@ class Music(commands.Cog):
             return await ctx.send('You must be connected to a voice channel to use this command.')
         voice_channel = ctx.author.voice.channel
         # Checks if the bot_id is in the list of user_ids connected to the author's voice channel.
-        if BOT_ID in ctx.author.voice.channel.voice_states.keys():
+        if self.bot.user.id in ctx.author.voice.channel.voice_states.keys():
             return await ctx.send('I am already connected to your voice channel. Check again!')
         if ctx.voice_client is None:
             await voice_channel.connect()
