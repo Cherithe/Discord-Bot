@@ -1,11 +1,16 @@
 import asyncio
+import os
 
 import discord
 import youtube_dl
 
 from discord.ext import commands
+from dotenv import load_dotenv
 
 from datastore import data_store
+
+load_dotenv()
+BOT_ID = os.getenv('BOT_ID')
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -36,9 +41,11 @@ async def play_next(self, ctx):
     vc = ctx.message.guild.voice_client
     # Pops the first item from the queue
     video_data = queue.pop(0)
-    player = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
-    data_store.set(data.keys())
-    await ctx.send(f'**Now playing:** {player.title} **[{video_data["duration"]}]**')
+    player_data = await YTDLSource.from_url(video_data['title'], loop=self.bot.loop, stream=True)
+    player = player_data['player']
+    data_store.set(data)
+    embed = discord.Embed(title='NOW PLAYING', description=f'{player.title} **[{video_data["duration"]}]**', color=discord.Color.blurple())
+    await ctx.send(embed=embed)
     print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{video_data["duration"]}]')
     vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
 
@@ -55,7 +62,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
         if 'entries' in data:
-            # take first item from a playlist
+            # if the first item is a playlist, then return only the first item
             data = data['entries'][0]
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return {'player': cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data), 'duration': data['duration']}
@@ -71,7 +78,7 @@ class Music(commands.Cog):
             return await ctx.send('You must be connected to a voice channel to use this command.')
         voice_channel = ctx.author.voice.channel
         # Checks if the bot_id is in the list of user_ids connected to the author's voice channel.
-        if 919765855435366490 in ctx.author.voice.channel.voice_states.keys():
+        if BOT_ID in ctx.author.voice.channel.voice_states.keys():
             return await ctx.send('I am already connected to your voice channel. Check again!')
         if ctx.voice_client is None:
             await voice_channel.connect()
@@ -98,12 +105,12 @@ class Music(commands.Cog):
         if vc.is_playing():
             if len(queue) == 50:
                 await ctx.send('The queue for this server is full. Wait for so'
-                               'ngs to finish before adding more.')
+                               'ngs to play before adding more.')
             video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            # If the video is longer than 35 minutes, cancel download and return with error message.
-            if video_data['duration'] > 2100:
+            # If the video is longer than 60 minutes, cancel download and return with error message.
+            if video_data['duration'] > 3600:
                 await ctx.send('Sorry, but the video you are trying to pla'
-                                   'y is longer than 35 minutes. Try using !pl'
+                                   'y is longer than 60 minutes. Try using !pl'
                                    'ay again but this time with a video of a s'
                                    'horter length.')
                 return
@@ -114,17 +121,18 @@ class Music(commands.Cog):
         else:
             async with ctx.typing():
                 video_data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-                if video_data['duration'] > 2100:
+                if video_data['duration'] > 3600:
                     await ctx.send('Sorry, but the video you are trying to pla'
-                                   'y is longer than 35 minutes. Try using !pl'
-                                   'ay again but this time with a video of a s'
-                                   'horter length.')
+                                    'y is longer than 60 minutes. Try using !pl'
+                                    'ay again but this time with a video of a s'
+                                    'horter length.')
                     return
                 player = video_data['player']
                 duration = f'{str(int(video_data["duration"]) // 60)}:{"%02d" % (int(video_data["duration"]) % 60)}'
                 queue.append({'title': player.title, 'duration': duration})
                 vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
-            await ctx.send(f'**Now playing:** {player.title} **[{duration}]**')
+                embed = discord.Embed(title='NOW PLAYING', description=f'{player.title} **[{duration}]**', color=discord.Color.blurple())
+            await ctx.send(embed=embed)
             print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{duration}]')
             # Removes the first item from the queue
             queue.pop(0)
@@ -155,19 +163,19 @@ class Music(commands.Cog):
     @commands.command(name='skip', help='Skips the current-playing song.')
     async def skip(self, ctx):
         vc = ctx.message.guild.voice_client
+        # Stops the current song from playing.
         vc.pause()
         await ctx.send('Skipped.')
+        # Loads a new player from the queue and starts playing it.
         await play_next(self, ctx)
 
     @commands.command(name='clear', help='Clears the existing queue.')
-    async def stop(self, ctx):
+    async def clear(self, ctx):
         data = data_store.get()
         queue = data['guilds'][f'{ctx.message.guild.id}']['queue']
         queue.clear()
         data_store.set(data)
-        vc = ctx.message.guild.voice_client
-        vc.stop()
-        await ctx.send('Bot has stopped playing.')
+        await ctx.send('The queue has been cleared.')
 
     @commands.command(name='remove', help='Removes a song from the queue.')
     async def remove(self, ctx, item=None):
@@ -189,7 +197,7 @@ class Music(commands.Cog):
         queue_list = duration_list = ''
         for count, item in enumerate(queue, 1):
             # Limits the number of items on each page to 5 maximum.
-            if count % 6 == 0:
+            if count != 1 and count % 5 == 1:
                 queue_pages.append(queue_list)
                 duration_pages.append(duration_list)
                 queue_list = duration_list = ''
@@ -197,11 +205,12 @@ class Music(commands.Cog):
             duration_list += f'**[{item["duration"]}]**\n\n'
             if len(item['title']) > 65:
                 duration_list += '\n'
+        # If there are still items that have not been added, append them all onto a new page.
         if queue_list != '':
             queue_pages.append(queue_list)
             duration_pages.append(duration_list)
         if queue_pages == []:
-            queue_pages.append('The queue is currently empty! Add more songs using !play.')
+            queue_pages.append('The queue is currently empty! Add more songs using ?play.')
         page_len = len(queue_pages)
         embed = discord.Embed(title=f'QUEUE', color=discord.Color.blurple())
         embed.add_field(name=f'Page 1 out of {page_len}', value=queue_pages[0], inline=True)
@@ -214,7 +223,8 @@ class Music(commands.Cog):
             await msg.add_reaction("⬅")
             await msg.add_reaction("➡")
             index = 0
-
+            # Hangs on after the queue display has been created to check for user reactions.
+            # Acts as a scrolling mechanism for the pages of the queue display, and times out after 1 minute.
             def check(reaction, user):
                 return user == ctx.author and str(reaction.emoji) in ["⬅", "➡"]
 
@@ -242,6 +252,28 @@ class Music(commands.Cog):
                         await msg.remove_reaction(reaction, user)
                 except asyncio.TimeoutError:
                     await ctx.send("The queue display has timed out.")
+                    break
+    
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """Disconnects the bot from the voice channel if it is idle for
+        more than 5 minutes.
+        """
+        if not member.id == self.bot.user.id:
+            return
+
+        elif before.channel is None:
+            voice = after.channel.guild.voice_client
+            time = 0
+            while True:
+                # Increments the timer by one for every second the bot is inactive.
+                await asyncio.sleep(1)
+                time = time + 1
+                if voice.is_playing() and not voice.is_paused():
+                    time = 0
+                if time == 300:
+                    await voice.disconnect()
+                if not voice.is_connected():
                     break
 
     @play.before_invoke

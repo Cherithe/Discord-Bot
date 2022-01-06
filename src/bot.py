@@ -13,8 +13,10 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
 intents = discord.Intents().all()
-bot = commands.Bot(command_prefix='!', intents=intents,
-                   help_command=commands.DefaultHelpCommand(no_category='Help'))
+bot = commands.Bot(command_prefix='?', intents=intents,
+                   help_command=commands.DefaultHelpCommand(no_category='Help'),
+                   activity = discord.Activity(type=discord.ActivityType.watching,
+                   name="2022! | Use ?help to get started."))
 
 print('Loading Cogs...\n')
 for filename in os.listdir('src/cogs'):
@@ -30,11 +32,8 @@ async def on_ready():
     """
 
     for guild in bot.guilds:
-        print(f'{bot.user} is connected to the following guild:\n'
+        print(f'{bot.user} is now connected to the following guild:\n'
             f'{guild.name} (id: {guild.id})\n')
-
-        members = '\n - '.join([member.name for member in guild.members])
-        print(f'Guild Members:\n - {members}\n')
 
         # If a profile for the guild does not already exist, append a new one onto
         # the list of guilds.
@@ -66,9 +65,8 @@ async def GuildLeaveEvent(guild):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send('The command you\'re tryin'
-        'g to use does not exist. Use !help for more information on available'
-        ' commands.')
+        await ctx.send('The command you\'re trying to use does not exist. Use '
+        '!help for more information on available commands.')
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('You do not have the permissions required to use this c'
         'ommand.')

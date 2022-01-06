@@ -98,7 +98,9 @@ class Economy(commands.Cog):
     async def leaderboard(self, ctx):
         data = data_store.get()
         leaderboard = ''
+        # Returns a list of user profiles matching the ids of server members.
         users = server_users(data['users'], ctx)
+        # Returns an iterator based on the list of server user profiles sorted by money.
         for rank, user in enumerate(sorted(users, key=lambda x: x['money'])[:5]):
             name = await self.bot.fetch_user(user['id'])
             leaderboard += f"**#{rank + 1}** {name}: {user['money']} coins\n\n"
