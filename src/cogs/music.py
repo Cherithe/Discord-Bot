@@ -43,6 +43,8 @@ async def play_next(self, ctx):
     await ctx.send(embed=embed)
     print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{video_data["duration"]}]')
     vc.play(player, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(self, ctx), self.bot.loop))
+    if data['guilds'][f'{ctx.message.guild.id}']['loop'] is True:
+        queue.append(video_data)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
@@ -130,7 +132,9 @@ class Music(commands.Cog):
             await ctx.send(embed=embed)
             print(f'Now playing in {ctx.guild.name} (id: {ctx.guild.id}): {player.title} [{duration}]')
             # Removes the first item from the queue
-            queue.pop(0)
+            video_data = queue.pop(0)
+            if data['guilds'][f'{ctx.message.guild.id}']['loop'] is True:
+                queue.append(video_data)
         data_store.set(data)
 
     @commands.command(name='pause', help='Pauses any audio playing from the bot.')
@@ -182,6 +186,28 @@ class Music(commands.Cog):
         video = queue.pop(int(item) - 1)
         data_store.set(data)
         await ctx.send(f'{video["title"]} has been removed from queue.')
+
+    @commands.command(name='loop', help='Loops the current queue.')
+    async def loop(self, ctx):
+        data = data_store.get()
+        guild = data['guilds'][f'{ctx.message.guild.id}']
+        if guild['loop'] is True:
+            await ctx.send('The queue is already looping!')
+            return
+        guild['loop'] = True
+        data_store.set(data)
+        await ctx.send('The queue has been set to loop.')
+
+    @commands.command(name='unloop', help='Stops looping the current queue.')
+    async def unloop(self, ctx):
+        data = data_store.get()
+        guild = data['guilds'][f'{ctx.message.guild.id}']
+        if guild['loop'] is False:
+            await ctx.send('The queue is not currently looping!')
+            return
+        guild['loop'] = False
+        data_store.set(data)
+        await ctx.send('The queue is no longer looping.')
 
     @commands.command(aliases=['q'], help='Prints the currently queued songs.')
     async def queue(self, ctx):
