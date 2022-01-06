@@ -20,13 +20,7 @@ class Datastore:
         from the initial object.
         """
 
-        self.last_update_time = 0
-
-        try:
-            with open('persistence.json', 'r') as file:
-                self.__store = json.load(file)
-        except (OSError, json.JSONDecodeError):
-            self.__store = initial_obj
+        self.__store = initial_obj
 
     def get(self):
         """Returns the data stored in the data store.
@@ -48,15 +42,6 @@ class Datastore:
         if not isinstance(store, dict):
             raise TypeError('store must be of type dictionary')
         self.__store = store
-
-        # Only update the persistence file if it was not updated in the last
-        # 5 seconds to reduce the time it takes to save the data store.
-
-        curr_time = time.time()
-        if curr_time > self.last_update_time + 5:
-            self.last_update_time = curr_time
-            with open('persistence.json', 'w') as file:
-                json.dump(self.__store, file)
 
 print('Loading Datastore...\n')
 

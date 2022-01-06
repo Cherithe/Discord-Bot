@@ -10,7 +10,6 @@ from datastore import data_store
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='?', intents=intents, 
@@ -42,6 +41,7 @@ async def on_ready():
         if not f'{guild.id}' in guilds:
             guilds[f'{guild.id}'] = ({
                 'filter': False,
+                'loop': False,
                 'queue': [],
             })
             print('A new guild profile has been created for '
