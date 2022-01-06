@@ -6,6 +6,8 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from io import BytesIO
+from PIL import Image
 import random
 
 load_dotenv()
@@ -74,6 +76,30 @@ class General(commands.Cog):
         embed = discord.Embed(title=f'WOW', description=f"{user}'s profile picture", color=discord.Color.blurple())
         embed.set_image(url=user.avatar_url)
         await ctx.send(embed=embed)
+
+    @commands.command(name='merge', help='Combines the profile pictures of two users.')
+    async def pfp(self, ctx):
+        # If no user is mentioned, then set user to the author of the sent command.
+        if len(ctx.message.mentions) == 2:
+            user1 = ctx.message.mentions[0]
+            user2 = ctx.message.mentions[1]
+        # If ctx.message.mentions contains more than one user, raise an error.
+        else:
+            await ctx.send('You must mention two users to use this command')
+            return
+
+        asset1 = user1.avatar_url_as(size=128)
+        asset2 = user2.avatar_url_as(size=128)
+        data1 = BytesIO(await asset1.read())
+        data2 = BytesIO(await asset2.read())
+        pfp1 = Image.open(data1)
+        pfp2 = Image.open(data2)
+        pfp1 = pfp1.crop((0, 0, 128, 64))
+        pfp2.paste(pfp1)
+        with BytesIO() as image_binary:
+            pfp2.save(image_binary, 'PNG')
+            image_binary.seek(0)
+            await ctx.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
 
     @commands.command(name='history', help='Finds all recent messages which contain keyword.')
     async def history(self, ctx, *, keywords = None):
