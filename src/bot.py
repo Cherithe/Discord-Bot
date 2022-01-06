@@ -45,7 +45,7 @@ async def on_ready():
                 'queue': [],
             })
             print('A new guild profile has been created for '
-                f'{guild.name} (id: {guild.id})')
+                f'{guild.name} (id: {guild.id})\n')
         else:
             # Clears the queue for the guild
             guilds[f'{guild.id}']['queue'].clear()
