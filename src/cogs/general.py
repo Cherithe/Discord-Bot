@@ -10,6 +10,8 @@ from io import BytesIO
 from PIL import Image
 import random
 
+from datastore import data_store
+
 load_dotenv()
 POGWALL = os.getenv('POGWALL')
 
@@ -216,6 +218,44 @@ class General(commands.Cog):
         # on Discord if more than 4 lines are attempted to be sent at once.
         for _ in range(4):
             await ctx.send(25 * f'{POGWALL}')
+
+    @commands.command(name='tag', help='Tags the mentioned user with a curse.')
+    async def tag(self, ctx):
+        if len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+        # If ctx.message.mentions does not contain one user, raise an error.
+        else:
+            await ctx.send('Try again, but this time mention only one user. Thanks.')
+            return
+        data = data_store.get()
+        guild = data['guilds'][f'{ctx.message.guild.id}']
+        if f'{user.id}' == guild['tagged_user']:
+            await ctx.send('The mentioned user is already tagged!')
+            return
+        response = ''
+        if f'{user.id}' == f'{self.bot.user.id}':
+            response += 'You do realise it doesn\'t work like that right? '
+            user = ctx.message.author.id
+        guild['tagged_user'] = f'{user.id}'
+        response += f'<@{user.id}> has been tagged!'
+        await ctx.send(response)
+        
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        """This function will react to the tagged user anytime they send a 
+        message in the guild.
+
+        Return Value:
+            - None
+        """
+
+        data = data_store.get()
+        guild = data['guilds'][f'{message.guild.id}']
+        if f'{message.author.id}' == guild['tagged_user']:
+            reaction_list = ["🗿", "💀", "🤡", "🖕", "🙅", "🤢", "🤥", "🤷", "🤣", "😂", "🤪", "💩"]
+            reaction = random.choice(reaction_list)
+            await message.add_reaction(reaction)
 
 def setup(bot):
     bot.add_cog(General(bot))

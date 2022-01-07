@@ -43,12 +43,14 @@ async def on_ready():
                 'filter': False,
                 'loop': False,
                 'queue': [],
+                'tagged_user': None,
             })
             print('A new guild profile has been created for '
                 f'{guild.name} (id: {guild.id})\n')
         else:
             # Clears the queue for the guild
             guilds[f'{guild.id}']['queue'].clear()
+            guilds[f'{guild.id}']['tagged_user'] = None
         data_store.set(data)
 
 @bot.event
