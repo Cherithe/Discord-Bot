@@ -136,7 +136,7 @@ class General(commands.Cog):
             await ctx.send('Try again, but this time just mention only one user. Thanks.')
             return
 
-        crazy_square = Image.open("src/images/crazy_square.png")
+        crazy_square = Image.open("src/images/Crazy_Square.png")
         asset = user.avatar_url_as(size=128)
         data = BytesIO(await asset.read())
         pfp = Image.open(data)
