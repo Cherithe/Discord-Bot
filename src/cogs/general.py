@@ -78,7 +78,7 @@ class General(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='merge', help='Combines the profile pictures of two users.')
-    async def pfp(self, ctx):
+    async def merge(self, ctx):
         # If no user is mentioned, then set user to the author of the sent command.
         if len(ctx.message.mentions) == 2:
             user1 = ctx.message.mentions[0]
@@ -98,6 +98,50 @@ class General(commands.Cog):
         pfp2.paste(pfp1)
         with BytesIO() as image_binary:
             pfp2.save(image_binary, 'PNG')
+            image_binary.seek(0)
+            await ctx.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
+
+    @commands.command(name='moustache', help='Gives your guy a cool moustache.')
+    async def moustache(self, ctx):
+        if len(ctx.message.mentions) == 0:
+            user = ctx.author
+        elif len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+        # If ctx.message.mentions contains more than one user, raise an error.
+        else:
+            await ctx.send('Try again, but this time just mention only one user. Thanks.')
+            return
+
+        moustache = Image.open("src/images/moustache.png")
+        asset = user.avatar_url_as(size=128)
+        data = BytesIO(await asset.read())
+        pfp = Image.open(data)
+
+        pfp.paste(moustache, (25, 50), moustache)
+        with BytesIO() as image_binary:
+            pfp.save(image_binary, 'PNG')
+            image_binary.seek(0)
+            await ctx.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
+
+    @commands.command(name='lick', help='Yummo.')
+    async def lick(self, ctx):
+        if len(ctx.message.mentions) == 0:
+            user = ctx.author
+        elif len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+        # If ctx.message.mentions contains more than one user, raise an error.
+        else:
+            await ctx.send('Try again, but this time just mention only one user. Thanks.')
+            return
+
+        crazy_square = Image.open("src/images/crazy_square.png")
+        asset = user.avatar_url_as(size=128)
+        data = BytesIO(await asset.read())
+        pfp = Image.open(data)
+
+        pfp.paste(crazy_square, (80, 70), crazy_square)
+        with BytesIO() as image_binary:
+            pfp.save(image_binary, 'PNG')
             image_binary.seek(0)
             await ctx.channel.send(file=discord.File(fp=image_binary, filename='image.png'))
 

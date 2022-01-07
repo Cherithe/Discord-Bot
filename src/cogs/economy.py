@@ -44,7 +44,7 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='profile', help='Shows user profile of the mentioned user')
+    @commands.command(name='profile', help='Shows user profile of the mentioned user.')
     async def profile(self, ctx):
         if len(ctx.message.mentions) == 0:
             user = ctx.author
