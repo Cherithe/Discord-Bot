@@ -136,7 +136,7 @@ class General(commands.Cog):
             await ctx.send('Try again, but this time just mention only one user. Thanks.')
             return
 
-        crazy_square = Image.open("src/images/Crazy_Square.png")
+        crazy_square = Image.open("src/images/licker.png")
         asset = user.avatar_url_as(size=128)
         data = BytesIO(await asset.read())
         pfp = Image.open(data)
@@ -239,11 +239,11 @@ class General(commands.Cog):
         guild['tagged_user'] = f'{user.id}'
         response += f'<@{user.id}> has been tagged!'
         await ctx.send(response)
-        
+
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        """This function will react to the tagged user anytime they send a 
+        """This function will react to the tagged user anytime they send a
         message in the guild.
 
         Return Value:
