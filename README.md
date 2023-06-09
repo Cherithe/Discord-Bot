@@ -1,7 +1,7 @@
 # Discord-Bot
 A work-in-progress Discord Bot built using discord.py.
 
-By Henry Gu (legman1) and Byron Sun (Cherithe). (2021-2022)
+By Henry Gu and Byron Sun. (2021-2022)
 
 Current Functionality:
 - In-built music/video player. (For personal use only)
